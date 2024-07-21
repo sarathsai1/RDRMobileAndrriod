@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "244634140968",
+    "project_id": "rdrtech-project",
+    "storage_bucket": "rdrtech-project.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:244634140968:android:92681c81ebf5f2e5f4d01d",
+        "android_client_info": {
+          "package_name": "com.asar.rdr"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "244634140968-appl52sf4lqdrbankvd5jmqt2a85092n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.asar.rdr",
+            "certificate_hash": "3af300cb09b79d4bb70deda0948840229e2d0267"
+          }
+        },
+        {
+          "client_id": "244634140968-sva74pkqer9qq9cmk5har334hr2qsumf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVMvTPkvsnumq3nSOERKI41AHmlYNevu0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "244634140968-sva74pkqer9qq9cmk5har334hr2qsumf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
