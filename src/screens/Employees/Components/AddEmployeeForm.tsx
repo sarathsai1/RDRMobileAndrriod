@@ -7,7 +7,10 @@ import DocumentPicker from 'react-native-document-picker';
 import { authAccessTonken } from '../../../services/Token';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+interface Employee {
+    id: number;
+    // add other properties here as needed
+}
 const AddEmployeeForm = ({ onSubmit }: { onSubmit: () => void }) => {
     const navigation = useNavigation<any>();
     const [employeeName, setEmployeeName] = useState('');
@@ -23,7 +26,7 @@ const AddEmployeeForm = ({ onSubmit }: { onSubmit: () => void }) => {
     const [adharCardFrontFile, setAdharCardFrontFile] = useState<any>(null);
     const [adharCardBackFile, setAdharCardBackFile] = useState<any>(null);
     const [panCardFile, setPanCardFile] = useState<any>(null);
-
+    const [formData, setFormData] = useState('');
     const [errors, setErrors] = useState({
         employeeName: '',
         companyEmail: '',
@@ -113,7 +116,7 @@ const AddEmployeeForm = ({ onSubmit }: { onSubmit: () => void }) => {
     };
 
     const validatePhoneNumber = (number: string) => {
-        const re = /^\d{10}$/;
+        const re = /^\d{13}$/;
         return re.test(number);
     };
 
@@ -199,6 +202,64 @@ const AddEmployeeForm = ({ onSubmit }: { onSubmit: () => void }) => {
         setErrors(newErrors);
         return !hasError;
     };
+   
+    
+      const validateField = (fieldName: any, value: string) => {
+        let error = '';
+    
+        switch (fieldName) {
+          case 'employeeName':
+            if (!value) error = 'Employee name is required';
+            break;
+          case 'companyEmail':
+            if (!value) {
+              error = 'Company email is required';
+            } else if (!/\S+@\S+\.\S+/.test(value)) {
+              error = 'Invalid email address';
+            }
+            break;
+          case 'personalEmail':
+            if (!value) {
+              error = 'Personal email is required';
+            } else if (!/\S+@\S+\.\S+/.test(value)) {
+              error = 'Invalid email address';
+            }
+            break;
+          case 'phoneNumber':
+            if (!value) {
+              error = 'Phone number is required';
+            } else if (!/^\d{13}$/.test(value)) {
+              error = 'Phone number must be 10 digits';
+            }
+            break;
+          case 'pinCode':
+            if (!value) {
+              error = 'Pin-Code is required';
+            } else if (!/^\d{6}$/.test(value)) {
+              error = 'Pin-Code must be 6 digits';
+            }
+            break;
+          default:
+            if (!value) error = `${fieldName} is required`;
+            break;
+        }
+    
+        return error;
+      };
+      
+    
+      const handleChanged = (fieldName: any, value: any) => {
+        setFormData((prevData: any) => ({
+          ...prevData,
+          [fieldName]: value,
+        }));
+    
+        const error = validateField(fieldName, value);
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          [fieldName]: error,
+        }));
+      };
 
     const handleSubmit = async () => {
         if (validateForm()) {
@@ -206,7 +267,7 @@ const AddEmployeeForm = ({ onSubmit }: { onSubmit: () => void }) => {
             formData.append('name', employeeName);
             // console.log("employeename",employeeName);
             formData.append('emailId', personalEmail);
-            formData.append('companyEmail',companyEmail);
+            formData.append('companyEmail', companyEmail);
             formData.append('phoneNumber', phoneNumber);
             formData.append('address', address);
             formData.append('city', city);
@@ -214,7 +275,8 @@ const AddEmployeeForm = ({ onSubmit }: { onSubmit: () => void }) => {
             formData.append('zipCode', pinCode);
             formData.append('expertise', expertise);
             formData.append('designation', role);
-            formData.append('professionalId', 1);
+            const storedId = await AsyncStorage.getItem('Id');
+            formData.append('professionalId', storedId);
 
             if (adharCardFrontFile) {
                 formData.append('adharFront', {
@@ -242,52 +304,52 @@ const AddEmployeeForm = ({ onSubmit }: { onSubmit: () => void }) => {
 
             try {
                 const token = await AsyncStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('Token not found');
+                }
+            
                 const response = await fetch('http://54.152.49.191:8080/employee/save', {
-                    method: 'POST',
-                    body:formData,
-                    headers: {
-                        'Authorization': `Bearer ${authAccessTonken}`,
-                        'content-Type': 'multipart/form-data',
-                    },
-                });
-                console.log("my backend response",response);
-                console.log("This is my formdata : ",{
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'Authorization': `Bearer ${authAccessTonken}`,
+                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'multipart/form-data',
                     },
                 });
-                console.log("formdata",formData);
+            console.log(response);
                 const textResponse = await response.text();
-                // console.log('Raw response:', textResponse);
-        
+                console.log(textResponse);
                 let result;
+            
                 try {
                     result = JSON.parse(textResponse);
-                    
-                    console.log('Parsed response:', result);
                 } catch (jsonError) {
-                    console.log("This is my response : ",response);
-                    console.log("This is my status : ",response.status);
-                    
+                    console.error('Failed to parse JSON response:', jsonError);
+                    console.log('Raw response:', textResponse);
                 }
-        console.log("This is my response Backend : ",response);
-        console.log("This is my status : ",response.status);
-                if (response.status==200) {
-                    console.log("Add Employee successful:", result);
-                    Alert.alert('Success', 'Add Employee  successful', [{ text: 'OK', onPress: () => navigation.navigate('',) }]);
-    
-                  
-                   
-                } 
+            
+                if (response.ok) {
+                    if (!result) {
+                        result = await response.json();
+                    }
+                    console.log('Add Employee successful:', result);
+                    await AsyncStorage.setItem('employeeId', JSON.stringify(result.id));
+                    console.log('Stored employeeId:', result.id);
+                    Alert.alert('Success', 'Add Employee successful', [
+                        {
+                            text: 'OK',
+                            onPress: () => navigation.navigate('Employees')
+                        }
+                    ]);
+                } else {
+                    console.log('Response status:', response.status);
+                    Alert.alert('Error', 'Failed to register');
+                }
             } catch (error) {
                 console.error('Error:', error);
                 Alert.alert('Error', 'Failed to register');
             }
-        
-    };
+        }
     };
     return (
         <View style={styles.formContainer}>
@@ -296,85 +358,86 @@ const AddEmployeeForm = ({ onSubmit }: { onSubmit: () => void }) => {
                     placeholder="Employee Name"
                     value={employeeName}
                     onChangeText={(value) => handleChange('employeeName', value)}
-                    errorMessage={errors.employeeName} label={''} editable={false} error={''} options={[]}                />
+                    error={errors.employeeName} label={''} editable={true}  options={[]} />
 
                 <RoundInput
                     placeholder="Employee Company email"
                     value={companyEmail}
                     onChangeText={(value) => handleChange('companyEmail', value)}
-                    errorMessage={errors.companyEmail} label={''} editable={false} error={''} options={[]}                />
+                    error={errors.companyEmail} label={''} editable={true}  options={[]} />
 
                 <RoundInput
                     placeholder="Employee Personal email"
                     value={personalEmail}
                     onChangeText={(value) => handleChange('personalEmail', value)}
-                    errorMessage={errors.personalEmail} label={''} editable={false} error={''} options={[]}                />
+                    error={errors.personalEmail} label={''} editable={true} options={[]} />
 
                 <RoundInput
                     placeholder="Employee Phone Number"
                     value={phoneNumber}
                     onChangeText={(value) => handleChange('phoneNumber', value)}
-                    errorMessage={errors.phoneNumber} label={''} editable={false} error={''} options={[]}                />
+                    error={errors.phoneNumber} label={''} editable={true}  options={[]}
+                    maxLength={13} />
 
                 <RoundInput
                     placeholder="Employee Address"
                     value={address}
                     onChangeText={(value) => handleChange('address', value)}
-                    errorMessage={errors.address} label={''} editable={false} error={''} options={[]}                />
+                    error={errors.address} label={''} editable={true}  options={[]} />
 
                 <RoundInput
                     placeholder="Employee City"
                     value={city}
                     onChangeText={(value) => handleChange('city', value)}
-                    errorMessage={errors.city} label={''} editable={false} error={''} options={[]}                />
+                    error={errors.city} label={''} editable={true} options={[]} />
 
                 <RoundInput
                     placeholder="Employee Country"
                     value={country}
                     onChangeText={(value) => handleChange('country', value)}
-                    errorMessage={errors.country} label={''} editable={false} error={''} options={[]}                />
+                    error={errors.country} label={''} editable={true}  options={[]} />
 
                 <RoundInput
                     placeholder="Employee Pin-Code"
                     value={pinCode}
                     onChangeText={(value) => handleChange('pinCode', value)}
-                    errorMessage={errors.pinCode} label={''} editable={false} error={''} options={[]}                />
-
+                    error={errors.pinCode} label={''} editable={true}  options={[]} />
                 <FileUploadInput
-                    uploadText='Upload Adhar Card Front'
-                    onPress={() => handleFileUpload(setAdharCardFrontFile, (error: any) => setErrors({ ...errors, adharCardFront: error }))}
-                    errorMessage={errors.adharCardFront} title={''} file={null} onUpload={function (): Promise<void> {
-                        throw new Error('Function not implemented.');
-                    } }                />
-                {adharCardFrontFile && <Text style={styles.fileName}>{adharCardFrontFile.name}</Text>}
-
+                    uploadText="Upload Adhar Card Front"
+                    file={adharCardFrontFile}
+                    onPress={() => handleFileUpload(setAdharCardFrontFile, (error: string) => setErrors({ ...errors, adharCardFront: error }))}
+                    pdfFile={adharCardFrontFile}
+                    pdfFileName={adharCardFrontFile?.name}
+                    errorMessage={errors.adharCardFront}
+                    onUpload={async () => { } } title={''}                />
                 <FileUploadInput
-                    uploadText='Upload Adhar Card Back'
-                    onPress={() => handleFileUpload(setAdharCardBackFile, (error: any) => setErrors({ ...errors, adharCardBack: error }))}
-                    errorMessage={errors.adharCardBack} title={''} file={null} onUpload={function (): Promise<void> {
-                        throw new Error('Function not implemented.');
-                    } }                />
-                {adharCardBackFile && <Text style={styles.fileName}>{adharCardBackFile.name}</Text>}
-
+                    uploadText="Upload Adhar Card Back"
+                    file={adharCardBackFile}
+                    onPress={() => handleFileUpload(setAdharCardBackFile, (error: string) => setErrors({ ...errors, adharCardBack: error }))}
+                    pdfFile={adharCardBackFile}
+                    pdfFileName={adharCardBackFile?.name}
+                    errorMessage={errors.adharCardBack}
+                    onUpload={async () => { } } title={''}                />
                 <FileUploadInput
-                    uploadText='Upload Pan Card'
-                    onPress={() => handleFileUpload(setPanCardFile, (error: any) => setErrors({ ...errors, panCard: error }))}
-                    errorMessage={errors.panCard} title={''} file={null} onUpload={function (): Promise<void> {
-                        throw new Error('Function not implemented.');
-                    } }                />
-                {panCardFile && <Text style={styles.fileName}>{panCardFile.name}</Text>}
+                    uploadText="Upload Pan Card"
+                    file={panCardFile}
+                    onPress={() => handleFileUpload(setPanCardFile, (error: string) => setErrors({ ...errors, panCard: error }))}
+                    pdfFile={panCardFile}
+                    pdfFileName={panCardFile?.name}
+                    errorMessage={errors.panCard}
+                    onUpload={async () => { } } title={''}                />
 
                 <RoundInput
                     placeholder="Employee Expertise"
                     value={expertise}
                     onChangeText={(value) => handleChange('expertise', value)}
-                    errorMessage={errors.expertise} label={''} editable={false} error={''} options={[]}                />
+                    error={errors.expertise} label={''} editable={true} options={[]} />
 
                 <RoundInput
                     placeholder="Employee Role"
                     value={role}
                     onChangeText={(value) => handleChange('role', value)}
-                    errorMessage={errors.role} label={''} editable={false} error={''} options={[]}                />
+                    error={errors.role} label={''} editable={true}  options={[]} />
             </ScrollView>
 
             <RoundButton

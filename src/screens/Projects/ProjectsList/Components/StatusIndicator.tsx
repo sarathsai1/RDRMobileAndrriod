@@ -3,14 +3,14 @@ import { View, Image, Text, StyleSheet } from 'react-native';
 
 // Define a type for the component props
 interface StatusIndicatorProps {
-    status: 'not_started' | 'in_progress' | 'completed' | 'default'; // Add more status types as needed
+    status: 'Not Started' | 'in_progress' | 'completed' | 'default'; // Add more status types as needed
 }
 
 const StatusIndicator: React.FC<StatusIndicatorProps> = ({ status }) => {
     // Function to determine which content to render based on status
     const renderStatusContent = () => {
         switch (status) {
-            case 'not_started':
+            case 'Not Started':
                 return (
                     <View style={styles.statusImageContent}>
                         <Image

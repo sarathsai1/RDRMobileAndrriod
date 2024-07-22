@@ -1,5 +1,3 @@
-// RoundInput.tsx
-
 import React from 'react';
 import { View, TextInput, Text, StyleSheet, Image, ViewStyle } from 'react-native';
 import { theme } from '../../theme'; // Update the path to your theme file
@@ -14,10 +12,11 @@ interface RoundInputProps {
     errorMessage?: string;
     maxLength?: number; 
     style?: ViewStyle;
-    options: string[];
-    onBlur?: () => void; // Add this line
-  
-    keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad'; // Define the allowed types
+    options: any[];
+    onBlur?: () => void; 
+    cursor?: 'auto' | 'default';
+    keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad';
+    inputStyle?: { backgroundColor: string; color: string };
 }
 
 const RoundInput: React.FC<RoundInputProps> = ({
@@ -26,29 +25,38 @@ const RoundInput: React.FC<RoundInputProps> = ({
     value,
     onChangeText,
     errorMessage,
-    maxLength , keyboardType,style,editable,onBlur
+    maxLength,
+    keyboardType,
+    style,
+    editable,
+    onBlur,
+    cursor,
+    error
+    
 }) => {
     return (
         <View style={styles.container}>
-              {label && <Text style={styles.label}>{label}</Text>}
-            <View style={[styles.inputContainer, errorMessage ? styles.inputContainerError : null]}>
+            {label && <Text style={styles.label}>{label}</Text>}
+            <View style={[styles.inputContainer, error ? styles.inputContainerError : null]}>
                 <TextInput
-               
                     placeholder={placeholder}
+                    placeholderTextColor={"black"} // Placeholder color from theme
                     value={value}
                     onChangeText={onChangeText}
-                    maxLength={maxLength} // Pass maxLength to TextInput
+                    maxLength={maxLength}
                     style={[styles.input, style]}
                     onBlur={onBlur}
-                    keyboardType={keyboardType} // Assign keyboardType to TextInput
+                    keyboardType={keyboardType}
+                    editable={editable}
                 />
-                {errorMessage && (
+                {error && (
                     <Image
                         source={require('../../assets/icons/error.png')} // Update with your error icon path
                         style={styles.errorIcon}
                     />
                 )}
             </View>
+            {error ? <Text style={styles.error}>{error}</Text> : null}
             {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
         </View>
     );
@@ -57,40 +65,49 @@ const RoundInput: React.FC<RoundInputProps> = ({
 const styles = StyleSheet.create({
     container: {
         marginBottom: 15,
+        color: 'black',
     },
     label: {
         marginBottom: 5,
-        color: "black", // Use your theme for consistent colors
+        color: theme.colors.text, // Use theme color for label text
     },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1.5,
-        borderColor: 'black', // Use your theme for consistent colors
+        borderColor: "black", // Use theme color for border
         borderRadius: 20,
-        paddingHorizontal: 5,
-        color: 'black', // Use your theme for consistent colors
+        paddingHorizontal: 10,
+        backgroundColor: theme.colors.background, // Use theme color for background
         width: '100%',
     },
     inputContainerError: {
-        borderColor: 'red', // Use your theme for error color
+        borderColor: "red", // Use theme color for error border
     },
     input: {
         flex: 1,
         width: '100%',
         paddingVertical: 10,
-        color:'black', // Use your theme for consistent colors
+        color: theme.colors.text, // Use theme color for text
     },
     errorIcon: {
         width: 20,
         height: 20,
-        tintColor: 'red', // Use your theme for error color
+        tintColor: "red", // Use theme color for error icon
     },
     errorText: {
-        color: 'red',
+        color: "black", // Use theme color for error text
         marginTop: 2,
         fontSize: 14,
     },
+    error: {
+        color: 'red',
+        marginTop: 5,
+        
+      },
+      errorMessage:{
+        color:'red',
+      }
 });
 
 export default RoundInput;

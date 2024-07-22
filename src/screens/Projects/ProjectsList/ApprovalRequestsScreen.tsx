@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import BackGround from "../../../components/BackGround";
 import defaults from "../../../styles/defaults";
@@ -9,59 +9,56 @@ import UniversalFormModal from "../../../components/UniversalFormModal";
 import AddProjectsForm, { FormData } from "./Components/AddProjectsForm";
 import SortByModal from "./Components/SortByModal";
 import useTabletStyle from "../../../styles/TabStyles";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 const ApprovalProjectsScreen: React.FC = () => {
+    const [projectsData, setProjectsData] = useState<any[]>([]);
+    const [error, setError] = useState<string | null>(null);
+    useEffect(() => {
+        const fetchProjects = async () => {
+            try {
+                const token = await AsyncStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error("Token is missing");
+                }
+                const response = await fetch(`http://54.152.49.191:8080/project/getAllProjects/71`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to fetch');
+                }
+                const data = await response.json();
 
-    const compProjectsData = [
-        {
-            message: '',
-            clientName: 'Prsad',
-            workNature: 'Income tax',
-            statusMesg: 'completed',
-            startDate: '10-02-2024',
-            etcDate: '15-02-22024'
-        },
-        {
-            message: '',
-            clientName: 'Guru Prsad',
-            workNature: 'GST',
-            statusMesg: 'completed',
-            startDate: '10-02-2024',
-            etcDate: '15-02-22024'
-        },
-        {
-            message: '',
-            clientName: 'Charan',
-            workNature: 'GST',
-            statusMesg: 'completed',
-            startDate: '10-02-2024',
-            etcDate: '15-02-22024'
-        },
-        {
-            message: '',
-            clientName: 'Ram',
-            workNature: 'GST',
-            statusMesg: 'completed',
-            startDate: '10-02-2024',
-            etcDate: '15-02-22024'
-        },
-    ];
+                // Log and validate data structure
+                console.log("Fetched data:", data);
+                setProjectsData(data);
+            } catch (err) {
+                console.error("Error fetching projects:", err);
+                setError('Failed to fetch projects');
+            }
+        };
+
+        fetchProjects();
+    }, []);
 
     return (
         <BackGround safeArea={true} style={defaults.flex}>
             <View style={styles.container}>
                 <ScrollView showsVerticalScrollIndicator={false} style={{ height: '80%', width: '100%' }}>
-                    {compProjectsData.map((project, index) => (
+                    {projectsData.map((project, index) => (
                         <View key={index} style={{}}>
                             <View style={{ zIndex: 1 }}>
-                                <ProjectsCards
-                                    key={index}
-                                    message={project.message}
-                                    clientName={project.clientName}
-                                    workNature={project.workNature}
-                                    statusMesg={project.statusMesg}
-                                    startDate={project.startDate}
-                                    etcDate={project.etcDate}
+                            <ProjectsCards
+                                    message={project.message || 'Prasad(POC) has recently modified!'} // Ensure message is a string
+                                    clientName={project.name || ''} // Ensure clientName is a string
+                                    workNature={project.natureOfWork || ''} // Ensure workNature is a string
+                                    statusMesg={project.projectStatus || ''} // Ensure statusMesg is a string
+                                    startDate={project.estimatedStartDate || ''} // Ensure startDate is a string
+                                    etcDate={project.estimatedEndDate || ''} // Ensure etcDate is a string
                                 />
                             </View>
 

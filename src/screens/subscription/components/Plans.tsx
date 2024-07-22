@@ -79,13 +79,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   priceText: {
+    color:"black",
     fontSize: 16,
   },
   radioButton: {
     height: 24,
     width: 24,
-    borderRadius: 12,
-    borderWidth: 3,
+    borderRadius: 15,
+    borderWidth: 2,
     borderColor: '#000',
     alignItems: 'center',
     justifyContent: 'center',
@@ -96,10 +97,10 @@ const styles = StyleSheet.create({
     borderRadius: 5, // Ensure this is always half of the height and width
   },
   radioButtonSelected: {
-    backgroundColor: '#000',
+    backgroundColor: 'green',
     height: 12,
     width: 12,
-    borderRadius: 8,
+    borderRadius: 5,
   },
 
 });

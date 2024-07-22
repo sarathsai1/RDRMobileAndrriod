@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView, StyleSheet, TextInput, Text, View, TouchableOpacity, Image, Alert, ViewStyle } from 'react-native';
 import { useNavigation } from "@react-navigation/native";
 import auth from '@react-native-firebase/auth';
@@ -46,7 +46,34 @@ const LoginScreen: React.FC = () => {
     console.log(confirmation);
     navigation.navigate('OtpVerify', { confirmation });
   };
+  
 
+  useEffect(() => {
+    const unsubscribe = auth().onAuthStateChanged(user => {
+      if (user) {
+        // User is signed in, start token management
+        startTokenRefreshTimer();
+        navigation.navigate('Login'); // Navigate to home screen or wherever appropriate
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigation]);
+
+  const startTokenRefreshTimer = () => {
+    const refreshInterval = 60 * 60 * 1000 ; // 1 hour
+    setInterval(async () => {
+      try {
+        const currentUser = auth().currentUser;
+        if (currentUser) {
+          await currentUser.getIdToken(true); // Force token refresh
+        }
+      } catch (error) {
+        auth().signOut();
+        navigation.navigate('Login'); // Redirect to login screen
+      }
+    }, refreshInterval);
+  };
   const handleLogin = async () => {
     const mobileNumberWithcountryid = countryid + phoneNumber
     console.log("mobile",mobileNumberWithcountryid);
@@ -112,7 +139,17 @@ const LoginScreen: React.FC = () => {
       console.error(error);
     }
   }
+  const [error, setError] = useState('');
+  const handlePhoneNumberChange = (text:string) => {
+    const phoneRegex = /^[0-9]{0,10}$/;
 
+    if (phoneRegex.test(text)) {
+      setPhoneNumber(text);
+      setError('');
+    } else {
+      setError('Give valid phonenumber');
+    }
+  };
   return (
     <BackGround safeArea={true} style={defaults.flex}>
       <View style={[styles.container, tabletStyle, isTablet && orientation === 'vertical' ? { width: '70%', height: 'auto', alignSelf: 'center' } : {}]}>
@@ -122,13 +159,15 @@ const LoginScreen: React.FC = () => {
         </View>
 
         <RoundInput
-          label='Mobile Number'
-          value={phoneNumber}
-          onChangeText={setPhoneNumber}
-          placeholder="Mobile Number"
-          keyboardType="phone-pad"
-          editable={false}
-          error={''} options={[]}        />
+        label='Mobile Number'
+        value={phoneNumber}
+        onChangeText={handlePhoneNumberChange}
+        placeholder="Mobile Number"
+        keyboardType="phone-pad"
+        editable={true}
+        error={error}
+        options={[]}
+      />
 
         <RoundButton
           title={'Log in'}

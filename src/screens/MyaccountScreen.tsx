@@ -9,7 +9,6 @@ import RNFS from 'react-native-fs';
 import FileViewer from 'react-native-file-viewer';
 import axios from 'axios';
 import useTabletStyle from "../styles/TabStyles";
-import { authAccessTonken } from "../services/Token";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const MyaccountScreen: React.FC = () => {
@@ -106,6 +105,27 @@ const MyaccountScreen: React.FC = () => {
         }
     };
 
+    const updateData = async () => {
+        setLoading(true);
+        try {
+            const token = await AsyncStorage.getItem('authToken');
+            const api_url = `http://54.152.49.191:8080/register/professional`;
+            const response = await axios.put(api_url, formData, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            console.log("Update Response Data:", response.data);
+            Alert.alert('Success', 'Data updated successfully');
+        } catch (error) {
+            console.error('Error updating data:', error);
+            Alert.alert('Error', 'Failed to update data');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const downloadAndOpenFile = async (url: string | null, fileName: string) => {
         const filePath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
         try {
@@ -129,19 +149,26 @@ const MyaccountScreen: React.FC = () => {
         }
     };
 
+    const handleChangeText = (field: keyof typeof formData, text: string) => {
+        setFormData(prevData => ({
+            ...prevData,
+            [field]: text,
+        }));
+    };
+
     const fields = [
-        { label: 'Full Name *', placeholder: 'Enter your name', value: formData.fullName, editable: false },
-        { label: 'Personal Email *', placeholder: 'Enter your personal email', value: formData.personalEmail, editable: false },
-        { label: 'Phone Number *', placeholder: 'Enter your phone number', value: formData.phoneNumber, editable: false },
-        { label: 'Company Name *', placeholder: 'Enter your company name', value: formData.companyName, editable: false },
-        { label: 'Business Email *', placeholder: 'Enter your business email', value: formData.businessEmail, editable: false },
-        { label: 'Website Link', placeholder: 'Enter your website link', value: formData.websiteLink, editable: false },
-        { label: 'Social Media Link', placeholder: 'Enter your social media link', value: formData.socialMediaLink, editable: false },
-        { label: 'GST Number *', placeholder: 'Enter your GST Number', value: formData.gstNumber, editable: false },
-        { label: 'Address', placeholder: 'Enter your address', value: formData.address, editable: false },
-        { label: 'City *', placeholder: 'Enter your city', value: formData.city, editable: false },
-        { label: 'Country *', placeholder: 'Enter your country', value: formData.country, editable: false },
-        { label: 'Pin Code *', placeholder: 'Enter your pin code', value: formData.pinCode, editable: false },
+        { label: 'Full Name *', placeholder: 'Enter your name', value: formData.fullName, field: 'fullName', editable: false },
+        { label: 'Personal Email *', placeholder: 'Enter your personal email', value: formData.personalEmail, field: 'personalEmail', editable: true },
+        { label: 'Phone Number *', placeholder: 'Enter your phone number', value: formData.phoneNumber, field: 'phoneNumber', editable: true },
+        { label: 'Company Name *', placeholder: 'Enter your company name', value: formData.companyName, field: 'companyName', editable: false },
+        { label: 'Business Email *', placeholder: 'Enter your business email', value: formData.businessEmail, field: 'businessEmail', editable: true },
+        { label: 'Website Link', placeholder: 'Enter your website link', value: formData.websiteLink, field: 'websiteLink', editable: false },
+        { label: 'Social Media Link', placeholder: 'Enter your social media link', value: formData.socialMediaLink, field: 'socialMediaLink', editable: false },
+        { label: 'GST Number *', placeholder: 'Enter your GST Number', value: formData.gstNumber, field: 'gstNumber', editable: true },
+        { label: 'Address', placeholder: 'Enter your address', value: formData.address, field: 'address', editable: false },
+        { label: 'City *', placeholder: 'Enter your city', value: formData.city, field: 'city', editable: false },
+        { label: 'Country *', placeholder: 'Enter your country', value: formData.country, field: 'country', editable: false },
+        { label: 'Pin Code *', placeholder: 'Enter your pin code', value: formData.pinCode, field: 'pinCode', editable: false },
     ];
 
     if (loading) {
@@ -170,8 +197,10 @@ const MyaccountScreen: React.FC = () => {
                             value={field.value}
                             editable={field.editable}
                             error={""}
-                            onChangeText={() => {}}
+                            onChangeText={(text) => handleChangeText(field.field, text)}
                             options={[]}
+                            cursor={'auto'}
+                            inputStyle={field.editable ? {} : styles.readOnlyInput}
                         />
                     ))}
                     <View style={styles.pdfContainer}>
@@ -184,21 +213,19 @@ const MyaccountScreen: React.FC = () => {
                         </View>
                     </View>
                     <View style={styles.pdfContainer}>
-                        <Text style={styles.pdfLabel}>Pan Card</Text>
+                        <Text style={styles.pdfLabel}>PAN/Voter Card</Text>
                         <View style={styles.pdfRow}>
                             <Text style={styles.pdfFileName}>{panOrVoterPdfFileName || 'No file available'}</Text>
-                            <TouchableOpacity onPress={() => downloadAndOpenFile(panOrVoterPdfFileName, 'pan-or-voter-card.pdf')}>
+                            <TouchableOpacity onPress={() => downloadAndOpenFile(panOrVoterPdfFileName, 'pan-voter-card.pdf')}>
                                 <Image source={require('../assets/icons/pdf.png')} style={styles.icon} />
                             </TouchableOpacity>
                         </View>
                     </View>
-                </ScrollView>
-                <View style={styles.buttonContainer}>
                     <RoundButton
-                        title={'Update'}
-                        onPress={() => { }}
+                        title="Update"
+                        onPress={updateData}
                     />
-                </View>
+                </ScrollView>
             </View>
         </BackGround>
     );
@@ -210,46 +237,46 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
-        paddingHorizontal: 5,
-    },
-    imageContainer: {
-        alignItems: 'center',
-        marginTop: 20,
-    },
-    profileImage: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        backgroundColor: "gray",
-    },
-    buttonContainer: {
-        marginTop: 20,
-    },
-    pdfContainer: {
-        marginTop: 20,
-    },
-    pdfLabel: {
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    pdfRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginVertical: 10,
-    },
-    pdfFileName: {
-        fontSize: 14,
-        color: 'blue',
-    },
-    icon: {
-        width: 20,
-        height: 20,
+        padding: 16,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    imageContainer: {
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    profileImage: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        borderWidth: 2,
+        borderColor: theme.colors.primary,
+    },
+    pdfContainer: {
+        marginBottom: 16,
+    },
+    pdfLabel: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 8,
+    },
+    pdfRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    pdfFileName: {
+        flex: 1,
+    },
+    icon: {
+        width: 24,
+        height: 24,
+    },
+    readOnlyInput: {
+        backgroundColor: '#f0f0f0',
+        color: '#a0a0a0',
     }
 });
 

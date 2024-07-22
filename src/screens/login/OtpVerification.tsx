@@ -16,8 +16,8 @@ import useTabletStyle from "../../styles/TabStyles";
 const OtpVerification: React.FC<{ route: any }> = ({ route }) => {
     const navigation = useNavigation<any>();
     const [otpValue, setOtpValue] = useState('');
-    // const { mobileNumber }: any = route.params;
-    const { mobileNumber }: any = '8686043386';
+    const { mobileNumber }: any = route.params;
+    // const { mobileNumber }: any = '8686043386';
     const { confirmationResult } = useAuth();
     const { isTablet, orientation, tabletStyle } = useTabletStyle();
 
@@ -44,7 +44,7 @@ const OtpVerification: React.FC<{ route: any }> = ({ route }) => {
 
                 <OtpTextInput
                     handleTextChange={(otp) => { console.log(otp); setOtpValue(otp) }}
-                    // defaultValue={otpValue} // Ensure the OTP input displays the autofilled value
+                    defaultValue={otpValue} // Ensure the OTP input displays the autofilled value
                     containerStyle={styles.otpContainer}
                     textInputStyle={styles.otpInput}
                     tintColor={theme.colors.primary}

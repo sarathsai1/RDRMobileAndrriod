@@ -4,6 +4,7 @@ import { theme } from "../../../theme";
 import { useNavigation } from "@react-navigation/native";
 import axios from 'axios';
 import { authAccessTonken } from "../../../services/Token";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface EmployeesListProps {
     id: number; // Added ID prop for identifying which employee to delete
@@ -16,10 +17,12 @@ const EmployeesList: React.FC<EmployeesListProps> = ({ id, name, phoneNumber, ex
     const navigation = useNavigation<any>();
 
     // Function to handle the delete action
-    const handleDelete = () => {
-        axios.delete(`http://54.152.49.191:8080/employee/5`,{
+    const handleDelete = async () => {
+        const employeeId = await AsyncStorage.getItem('employeeId');
+        const token = await AsyncStorage.getItem('authToken');
+        axios.delete(`http://54.152.49.191:8080/employee/${employeeId}`,{
 headers: {
-    'Authorization': `Bearer ${authAccessTonken}`,
+    'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json',
   },
 

@@ -8,7 +8,7 @@ import { useNavigation } from "@react-navigation/native";
 import UniversalFormModal from "../../components/UniversalFormModal";
 import AddClientForm, { FormData } from "./Components/AddClientForm";
 import useTabletStyle from "../../styles/TabStyles";
-import { authAccessTonken } from "../../services/Token";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface Client {
     id: string;
@@ -25,42 +25,38 @@ const ClientsScreen: React.FC = () => {
     const handleCloseModal = () => setModalVisible(false);
 
     useEffect(() => {
-       
-        // http://192.168.0.106:8080/client/getAllClientNames
-        const professionalId = 1;
-        fetch(`http://54.152.49.191:8080/client/getClients/${professionalId}`,{
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${authAccessTonken}`
+        const fetchClients = async () => {
+            try {
+                const token = await AsyncStorage.getItem('authToken');
+                const professionalId = await AsyncStorage.getItem('Id');
                 
-            },
-        })
-        
-            .then(response => {
-                console.log('response data from the get method : ',response)
-                
+                if (!token || !professionalId ){
+                    throw new Error("Token or ID is missing");
+                }
+
+                const response = await fetch(`http://54.152.49.191:8080/client/getClients/${professionalId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
-                return response.json();
-            })
-            .then(data => {
+
+                const data = await response.json();
                 setClients(data);
-                
-            })
-            
-            .catch(error => {
+                console.log('Clients fetched successfully:', data);
+            } catch (error) {
                 console.error('Error fetching clients:', error);
                 Alert.alert('Error', 'There was an error fetching the client data.');
-            });
+            }
+        };
+
+        fetchClients();
     }, []);
-    // console.log("bghghj",fetch('http://54.152.49.191:8080/client/getClients/1',{
-    //     method: 'GET',
-    //     headers: {
-    //         'Authorization': `Bearer ${authAccessTonken}`
-            
-    //     },
-    // }))
+
     const handleClientsNamesPress = (name: string) => {
         console.log(name + ' pressed');
         navigation.navigate("Projects");
@@ -68,7 +64,7 @@ const ClientsScreen: React.FC = () => {
 
     const handleAddClients = () => {
         // Handle adding clients here
-    }
+    };
 
     const handleFormSubmit = (formData: FormData) => {
         console.log('Form Data:', formData);

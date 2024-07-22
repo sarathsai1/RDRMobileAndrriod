@@ -12,8 +12,9 @@ interface FileUploadInputProps {
     errorMessage?: string;
     url?: string | null; // Add the url prop here
     title: string;
+    onUpload: (file: any) => void;
     file: DocumentPickerResponse | null;
-    onUpload: () => Promise<void>;
+   
 }
 
 const FileUploadInput: React.FC<FileUploadInputProps> = ({onUpload,file, label, uploadText, onPress, pdfFile, pdfFileName, errorMessage,url,title }) => {
@@ -83,7 +84,7 @@ const styles = StyleSheet.create({
         resizeMode: 'contain',
     },
     uploadText: {
-        color:"black",
+        color:"green",
         marginTop: 10, // Space between icon and text
     },
     error: {

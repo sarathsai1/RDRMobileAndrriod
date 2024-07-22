@@ -11,7 +11,7 @@ const ApprovalStatus: React.FC = () => {
     return (
         <BackGround safeArea={true} style={defaults.flex}>
             <View style={styles.container}>
-                <TouchableOpacity onPress={() => navigation.navigate('Subscription')}>
+                <TouchableOpacity onPress={() => navigation.navigate('')}>
                     <Image
                         source={require('../assets/icons/status_pending.png')} // Replace with your local icon path
                         style={styles.icon}

@@ -5,6 +5,8 @@ import RoundPicker from "./RoundPicker";
 type MultiSelectDropDownProps = {
     data: string[];
     label: string;
+    selectedItems: string[];
+    onSelectionChange: (selectedItems: string[]) => void;
 };
 
 type TagProps = {

@@ -8,11 +8,8 @@ import SubscriptionPlans from './components/Plans';
 import RoundButton from '../../components/buttons/RoundButton';
 import CouponCode from './components/Coupon';
 import { useNavigation } from '@react-navigation/native';
-import { useRazorpayPayment } from '../../components/PaymentMethod/UseRazorpayPayment';
 import useTabletStyle from '../../styles/TabStyles';
-import { authAccessTonken } from '../../services/Token';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 
 type SubscriptionPlansType = {
     id: string;
@@ -20,7 +17,7 @@ type SubscriptionPlansType = {
     subscriptionDuration: number;
     subscriptionPlanAmount: number;
     description: string[];
-  };
+};
 
 const SubscriptionScreen: React.FC = () => {
     const navigation = useNavigation<any>();
@@ -30,24 +27,21 @@ const SubscriptionScreen: React.FC = () => {
     const [planGrandTotalAmount, setPlanGrandTotalAmount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
 
     const { isTablet, orientation, tabletStyle } = useTabletStyle();
 
     useEffect(() => {
         const fetchSubscriptionPlans = async () => {
             try {
-
                 const token = await AsyncStorage.getItem('authToken');
-                const response = await axios.get('http://54.152.49.191:8080/subscription/getAllPlans',{
+                const response = await axios.get('http://54.152.49.191:8080/subscription/getAllPlans', {
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`,
                     },
-                    
-
                 });
                 setSubscriptionOptions(response.data);
-                console.log(response);
             } catch (err) {
                 console.error('Error fetching subscription plans:', err);
                 setError('Failed to fetch subscription plans');
@@ -59,25 +53,9 @@ const SubscriptionScreen: React.FC = () => {
 
         fetchSubscriptionPlans();
     }, []);
-    useEffect(() => {
-        const getUserData = async () => {
-          try {
-            const value = await AsyncStorage.getItem('sarath');
-            if (value !== null) {
-              console.log("AsyncStorage value", value);
-              const userData = JSON.parse(value);
-              
-       
-        
-            }
-          } catch (error) {
-            console.error('Error retrieving item from AsyncStorage:', error);
-          }
-        };
-    
-        getUserData();
-      }, []);
+
     const handleSelectionChange = (selectedOption: SubscriptionPlansType) => {
+        setSelectedPlanId(selectedOption.id);
         setPlanPrice(selectedOption.subscriptionPlanAmount);
         setPlanGrandTotalAmount(selectedOption.subscriptionPlanAmount - discount);
     };
@@ -87,24 +65,42 @@ const SubscriptionScreen: React.FC = () => {
         setPlanGrandTotalAmount(planPrice - newDiscount);
     };
 
-    const paymentDetails = {
-        amount: Math.round(planGrandTotalAmount) * 100, // Amount in paise
-        currency: 'INR',
-        receipt: 'order_123ABC',
-    };
+    const handleSubscribe = async () => {
+        if (!selectedPlanId) {
+            Alert.alert('Error', 'Please select a subscription plan');
+            return;
+        }
 
-    const prefillInfo = {
-        email: 'prasad@gmail.com',
-        contact: '9123456789',
-        name: 'Prasad'
-    };
+        try {
+            const token = await AsyncStorage.getItem('authToken');
+            const professionalId = await AsyncStorage.getItem('Id'); // Fetch the professional ID from storage
 
-    const razorpayKey = 'rzp_test_rTmjUthXJUFxyQ';
+            if (!professionalId) {
+                Alert.alert('Error', 'Professional ID not found');
+                return;
+            }
 
-    // const makePayment = useRazorpayPayment(razorpayKey, paymentDetails, prefillInfo);
+            const response = await axios.post(
+                `http://54.152.49.191:8080/register/professional/addSubscriptionPlan/${professionalId}/${selectedPlanId}`,
+                {},
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }
+            );
 
-    const handleSubscribe = () => {
-        navigation.navigate('Home');
+            if (response.status === 200) {
+                Alert.alert('Success', 'Subscription plan added successfully');
+                navigation.navigate('Home');
+            } else {
+                Alert.alert('Error', 'Failed to add subscription plan');
+            }
+        } catch (err) {
+            console.error('Error subscribing to plan:', err);
+            Alert.alert('Error', 'Failed to add subscription plan');
+        }
     };
 
     if (loading) {
@@ -139,33 +135,13 @@ const SubscriptionScreen: React.FC = () => {
                                     <View style={styles.discountLine}>
                                         <Text style={styles.discountText}>All Your Discounts:</Text>
                                         <Text style={[styles.discountText, styles.discountAmount]}>
-                                            {
-                                                discount === 0 ? (
-                                                    <>
-                                                        ₹{discount}
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        -₹{discount}
-                                                    </>
-                                                )
-                                            }
+                                            {discount === 0 ? `₹${discount}` : `-₹${discount}`}
                                         </Text>
                                     </View>
                                     <View style={styles.totalLine}>
                                         <Text style={styles.totalText}>Grand total:</Text>
                                         <Text style={styles.totalAmount}>
-                                            {
-                                                planGrandTotalAmount < 0 ? (
-                                                    <>
-                                                        ₹0
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        ₹{planGrandTotalAmount}
-                                                    </>
-                                                )
-                                            }
+                                            {planGrandTotalAmount < 0 ? `₹0` : `₹${planGrandTotalAmount}`}
                                         </Text>
                                     </View>
                                 </View>
@@ -178,12 +154,11 @@ const SubscriptionScreen: React.FC = () => {
                                     />
 
                                     <Text style={styles.terms}>
-                                        you agree to the <Text style={styles.link} onPress={() => Linking.openURL('https://example.com/terms')}>Terms of Service</Text> and <Text style={styles.link} onPress={() => Linking.openURL('https://example.com/privacy')}>Privacy Policy</Text>. Subscription automatically renews unless auto-renew is turned off at least 24-hours before the end of the current period.
+                                        You agree to the <Text style={styles.link} onPress={() => Linking.openURL('https://example.com/terms')}>Terms of Service</Text> and <Text style={styles.link} onPress={() => Linking.openURL('https://example.com/privacy')}>Privacy Policy</Text>. Subscription automatically renews unless auto-renew is turned off at least 24-hours before the end of the current period.
                                     </Text>
                                 </View>
                             </View>
                         </View>
-
                     </View>
                 </BackGround>
             ) : (
@@ -204,33 +179,13 @@ const SubscriptionScreen: React.FC = () => {
                                 <View style={styles.discountLine}>
                                     <Text style={styles.discountText}>All Your Discounts:</Text>
                                     <Text style={[styles.discountText, styles.discountAmount]}>
-                                        {
-                                            discount === 0 ? (
-                                                <>
-                                                    ₹{discount}
-                                                </>
-                                            ) : (
-                                                <>
-                                                    -₹{discount}
-                                                </>
-                                            )
-                                        }
+                                        {discount === 0 ? `₹${discount}` : `-₹${discount}`}
                                     </Text>
                                 </View>
                                 <View style={styles.totalLine}>
                                     <Text style={styles.totalText}>Grand total:</Text>
                                     <Text style={styles.totalAmount}>
-                                        {
-                                            planGrandTotalAmount < 0 ? (
-                                                <>
-                                                    ₹0
-                                                </>
-                                            ) : (
-                                                <>
-                                                    ₹{planGrandTotalAmount}
-                                                </>
-                                            )
-                                        }
+                                        {planGrandTotalAmount < 0 ? `₹0` : `₹${planGrandTotalAmount}`}
                                     </Text>
                                 </View>
                             </View>
@@ -242,7 +197,7 @@ const SubscriptionScreen: React.FC = () => {
                             />
 
                             <Text style={styles.terms}>
-                                you agree to the <Text style={styles.link} onPress={() => Linking.openURL('https://example.com/terms')}>Terms of Service</Text> and <Text style={styles.link} onPress={() => Linking.openURL('https://example.com/privacy')}>Privacy Policy</Text>. Subscription automatically renews unless auto-renew is turned off at least 24-hours before the end of the current period.
+                                You agree to the <Text style={styles.link} onPress={() => Linking.openURL('https://example.com/terms')}>Terms of Service</Text> and <Text style={styles.link} onPress={() => Linking.openURL('https://example.com/privacy')}>Privacy Policy</Text>. Subscription automatically renews unless auto-renew is turned off at least 24-hours before the end of the current period.
                             </Text>
                         </View>
                     </View>
@@ -264,7 +219,7 @@ const styles = StyleSheet.create({
 
     title: {
         fontSize: 35,
-        color: theme.colors.text,
+        color: "green",
         fontWeight: 'bold',
         marginBottom: 10,
     },
@@ -286,7 +241,7 @@ const styles = StyleSheet.create({
     },
 
     couponContent: {
-        backgroundColor: theme.colors.primary, // Replace with your desired background color
+        backgroundColor: theme.colors.primary,
         borderRadius: 25,
         paddingVertical: 8,
         marginVertical: 10,
@@ -296,7 +251,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 4, // Adjust as needed
+        marginBottom: 4,
     },
     totalLine: {
         paddingHorizontal: 15,
@@ -304,19 +259,19 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     discountText: {
-        color: '#fff', // Replace with your desired text color
+        color: '#fff',
         fontSize: 16,
     },
     discountAmount: {
         fontWeight: 'bold',
     },
     totalText: {
-        color: '#fff', // Replace with your desired text color
+        color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
     },
     totalAmount: {
-        color: '#fff', // Replace with your desired amount color
+        color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
     },
