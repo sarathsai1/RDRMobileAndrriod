@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import BackGround from "../../components/BackGround";
-import { FlatList, ScrollView, StyleSheet, Text, View, Alert } from "react-native";
+import { FlatList, StyleSheet, Text, View, Alert } from "react-native";
 import defaults from "../../styles/defaults";
 import ClientsSelectOption from "./Components/ClientsSelectOptions";
 import RoundButton from "../../components/buttons/RoundButton";
@@ -20,20 +20,38 @@ const ClientsScreen: React.FC = () => {
     const [isModalVisible, setModalVisible] = useState(false);
     const [clients, setClients] = useState<Client[]>([]);
     const { isTablet, orientation, tabletStyle } = useTabletStyle();
+    const [professionalId, setProfessionalId] = useState<number | null>(null);
 
     const handleOpenModal = () => setModalVisible(true);
     const handleCloseModal = () => setModalVisible(false);
 
     useEffect(() => {
+        const getID = async () => {
+            try {
+                const storedId = await AsyncStorage.getItem('Id');
+                if (storedId !== null) {
+                    console.log("AsyncStorage value", storedId);
+                    setProfessionalId(JSON.parse(storedId));
+                }
+            } catch (error) {
+                console.error('Error retrieving item from AsyncStorage:', error);
+            }
+        };
+
+        getID();
+    }, []);
+
+    useEffect(() => {
         const fetchClients = async () => {
+            if (professionalId === null) {
+                console.log(professionalId)
+                return;
+            }
             try {
                 const token = await AsyncStorage.getItem('authToken');
-                const professionalId = await AsyncStorage.getItem('Id');
-                
-                if (!token || !professionalId ){
-                    throw new Error("Token or ID is missing");
+                if (!token) {
+                    throw new Error("Token is missing");
                 }
-
                 const response = await fetch(`http://54.152.49.191:8080/client/getClients/${professionalId}`, {
                     method: 'GET',
                     headers: {
@@ -55,15 +73,11 @@ const ClientsScreen: React.FC = () => {
         };
 
         fetchClients();
-    }, []);
+    }, [professionalId]);
 
     const handleClientsNamesPress = (name: string) => {
         console.log(name + ' pressed');
         navigation.navigate("Projects");
-    };
-
-    const handleAddClients = () => {
-        // Handle adding clients here
     };
 
     const handleFormSubmit = (formData: FormData) => {
@@ -85,22 +99,20 @@ const ClientsScreen: React.FC = () => {
                     </View>
                 </View>
 
-                <ScrollView showsVerticalScrollIndicator={false}>
-                    <FlatList
-                        data={clients}
-                        renderItem={({ item }) => (
-                            <View style={{ width: isTablet && orientation === 'horizontal' ? '50%' : '100%', padding: 5 }}>
-                                <ClientsSelectOption title={item.name} onPress={() => handleClientsNamesPress(item.name)} />
-                            </View>
-                        )}
-                        keyExtractor={(item) => item.id}
-                        numColumns={isTablet && orientation === 'horizontal' ? 2 : 1}
-                        key={isTablet && orientation === 'horizontal' ? 'two-columns' : 'one-column'}
-                        columnWrapperStyle={
-                            isTablet && orientation === 'horizontal' ? { justifyContent: 'space-between' } : undefined
-                        }
-                    />
-                </ScrollView>
+                <FlatList
+                    data={clients}
+                    renderItem={({ item }) => (
+                        <View style={{ width: isTablet && orientation === 'horizontal' ? '50%' : '100%', padding: 5 }}>
+                            <ClientsSelectOption title={item.name} onPress={() => handleClientsNamesPress(item.name)} />
+                        </View>
+                    )}
+                    keyExtractor={(item) => item.id}
+                    numColumns={isTablet && orientation === 'horizontal' ? 2 : 1}
+                    key={isTablet && orientation === 'horizontal' ? 'two-columns' : 'one-column'}
+                    columnWrapperStyle={
+                        isTablet && orientation === 'horizontal' ? { justifyContent: 'space-between' } : undefined
+                    }
+                />
 
                 <UniversalFormModal visible={isModalVisible} onClose={handleCloseModal} titleName={'Add Client'}>
                     <AddClientForm onSubmit={handleFormSubmit} />

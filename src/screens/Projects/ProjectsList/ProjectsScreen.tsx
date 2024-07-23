@@ -17,7 +17,7 @@ const ProjectsScreen: React.FC = () => {
     const [isModalVisible, setModalVisible] = useState(false);
     const handleOpenModal = () => setModalVisible(true);
     const handleCloseModal = () => setModalVisible(false);
-
+    const [professionalId, setProfessionalId] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [sortmodalVisible, setSortModalVisible] = useState(false);
     const [selectedSortOption, setSelectedSortOption] = useState('');
@@ -31,9 +31,29 @@ const ProjectsScreen: React.FC = () => {
         { name: 'In Progress (Orange)', value: 'inProgress' },
         { name: 'Completed (Green)', value: 'completed' },
     ];
+    useEffect(() => {
+        const getID = async () => {
+            try {
+                const storedId = await AsyncStorage.getItem('Id');
+                if (storedId !== null) {
+                    console.log("AsyncStorage value", storedId);
+                    setProfessionalId(JSON.parse(storedId));
+                }
+            } catch (error) {
+                console.error('Error retrieving item from AsyncStorage:', error);
+            }
+        };
+
+        getID();
+    }, []);
 
     useEffect(() => {
         const fetchProjects = async () => {
+            if (professionalId === null) {
+                console.log(professionalId);
+                return;
+            }
+        
             try {
                 const token = await AsyncStorage.getItem('authToken');
                 if (!token) {

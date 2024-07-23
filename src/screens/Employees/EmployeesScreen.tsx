@@ -50,6 +50,7 @@ const EmployeesScreen: React.FC = () => {
     useEffect(() => {
         const fetchEmployees = async () => {
             if (professionalId === null) {
+                console.log(professionalId);
                 return;
             }
             try {

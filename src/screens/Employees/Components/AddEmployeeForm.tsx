@@ -116,7 +116,7 @@ const AddEmployeeForm = ({ onSubmit }: { onSubmit: () => void }) => {
     };
 
     const validatePhoneNumber = (number: string) => {
-        const re = /^\d{13}$/;
+        const re = /^\d{12}$/;
         return re.test(number);
     };
 
@@ -150,12 +150,12 @@ const AddEmployeeForm = ({ onSubmit }: { onSubmit: () => void }) => {
             newErrors.personalEmail = '';
         }
 
-        // if (!phoneNumber || !validatePhoneNumber(phoneNumber)) {
-        //     newErrors.phoneNumber = 'Valid phone number is required.';
-        //     hasError = true;
-        // } else {
-        //     newErrors.phoneNumber = '';
-        // }
+        if (!phoneNumber || !validatePhoneNumber(phoneNumber)) {
+            newErrors.phoneNumber = 'Valid phone number is required.';
+            hasError = true;
+        } else {
+            newErrors.phoneNumber = '';
+        }
 
         if (!address) {
             newErrors.address = 'Address is required.';
@@ -204,48 +204,48 @@ const AddEmployeeForm = ({ onSubmit }: { onSubmit: () => void }) => {
     };
    
     
-      const validateField = (fieldName: any, value: string) => {
-        let error = '';
+    //   const validateField = (fieldName: any, value: string) => {
+    //     let error = '';
     
-        switch (fieldName) {
-          case 'employeeName':
-            if (!value) error = 'Employee name is required';
-            break;
-          case 'companyEmail':
-            if (!value) {
-              error = 'Company email is required';
-            } else if (!/\S+@\S+\.\S+/.test(value)) {
-              error = 'Invalid email address';
-            }
-            break;
-          case 'personalEmail':
-            if (!value) {
-              error = 'Personal email is required';
-            } else if (!/\S+@\S+\.\S+/.test(value)) {
-              error = 'Invalid email address';
-            }
-            break;
-          case 'phoneNumber':
-            if (!value) {
-              error = 'Phone number is required';
-            } else if (!/^\d{13}$/.test(value)) {
-              error = 'Phone number must be 10 digits';
-            }
-            break;
-          case 'pinCode':
-            if (!value) {
-              error = 'Pin-Code is required';
-            } else if (!/^\d{6}$/.test(value)) {
-              error = 'Pin-Code must be 6 digits';
-            }
-            break;
-          default:
-            if (!value) error = `${fieldName} is required`;
-            break;
-        }
+    //     switch (fieldName) {
+    //       case 'employeeName':
+    //         if (!value) error = 'Employee name is required';
+    //         break;
+    //       case 'companyEmail':
+    //         if (!value) {
+    //           error = 'Company email is required';
+    //         } else if (!/\S+@\S+\.\S+/.test(value)) {
+    //           error = 'Invalid email address';
+    //         }
+    //         break;
+    //       case 'personalEmail':
+    //         if (!value) {
+    //           error = 'Personal email is required';
+    //         } else if (!/\S+@\S+\.\S+/.test(value)) {
+    //           error = 'Invalid email address';
+    //         }
+    //         break;
+    //       case 'phoneNumber':
+    //         if (!value) {
+    //           error = 'Phone number is required';
+    //         } else if (!/^\d{13}$/.test(value)) {
+    //           error = 'Phone number must be 10 digits';
+    //         }
+    //         break;
+    //       case 'pinCode':
+    //         if (!value) {
+    //           error = 'Pin-Code is required';
+    //         } else if (!/^\d{6}$/.test(value)) {
+    //           error = 'Pin-Code must be 6 digits';
+    //         }
+    //         break;
+    //       default:
+    //         if (!value) error = `${fieldName} is required`;
+    //         break;
+    //     }
     
-        return error;
-      };
+    //     return error;
+    //   };
       
     
       const handleChanged = (fieldName: any, value: any) => {
@@ -254,11 +254,11 @@ const AddEmployeeForm = ({ onSubmit }: { onSubmit: () => void }) => {
           [fieldName]: value,
         }));
     
-        const error = validateField(fieldName, value);
-        setErrors((prevErrors) => ({
-          ...prevErrors,
-          [fieldName]: error,
-        }));
+        // const error = validateField(fieldName, value);
+        // setErrors((prevErrors) => ({
+        //   ...prevErrors,
+        //   [fieldName]: error,
+        // }));
       };
 
     const handleSubmit = async () => {
@@ -316,6 +316,7 @@ const AddEmployeeForm = ({ onSubmit }: { onSubmit: () => void }) => {
                         'Content-Type': 'multipart/form-data',
                     },
                 });
+                console.log(formData);
             console.log(response);
                 const textResponse = await response.text();
                 console.log(textResponse);
